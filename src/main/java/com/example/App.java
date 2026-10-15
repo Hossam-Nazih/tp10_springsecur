@@ -1,135 +1,93 @@
 package com.example;
 
-import com.example.model.*;
-import com.example.service.ReservationService;
+import com.example.model.joined.Developpeur;
+import com.example.model.joined.Employe;
+import com.example.model.joined.Manager;
+import com.example.model.joined.Stagiaire;
+import com.example.model.singletable.Camion;
+import com.example.model.singletable.Moto;
+import com.example.model.singletable.Vehicule;
+import com.example.model.singletable.Voiture;
+import com.example.model.tableperclass.Electronique;
+import com.example.model.tableperclass.Livre;
+import com.example.model.tableperclass.Produit;
+import com.example.model.tableperclass.Vetement;
 
-import javax.persistence.*;
-import java.time.LocalDateTime;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
+import org.h2.tools.Server;
+
+import java.sql.SQLException;
+import java.util.List;
+import java.util.Scanner;
 
 /**
- * Programme de demonstration du lab : relations OneToMany / ManyToOne / ManyToMany,
- * propagation en cascade et suppression des orphelins.
- * <p>
- * Les requetes SQL produites par Hibernate s'affichent dans la console
- * (hibernate.show_sql + hibernate.format_sql dans persistence.xml).
+ * Point d'entree : enregistre quelques objets de chaque hierarchie puis les relit
+ * par une requete polymorphe sur la classe mere.
+ * Le SQL affiche montre la difference entre les strategies :
+ * - SINGLE_TABLE    : un simple SELECT sur Vehicule
+ * - JOINED          : des LEFT OUTER JOIN entre Employe et ses sous-tables
+ * - TABLE_PER_CLASS : un UNION ALL des tables Livre, Electronique, Vetement
  */
 public class App {
 
-    // date de reference pour tous les creneaux de la demo
-    private static final LocalDateTime LUNDI_9H = LocalDateTime.of(2026, 10, 19, 9, 0);
+    public static void main(String[] args) throws SQLException {
+        // console web H2 dans la meme JVM : elle voit donc la base en memoire
+        Server consoleH2 = Server.createWebServer("-web", "-webAllowOthers", "-webPort", "8082").start();
 
-    public static void main(String[] args) {
-        // l'EntityManagerFactory est couteuse : une seule pour toute l'application
-        EntityManagerFactory emf = Persistence.createEntityManagerFactory("gestion-reservations-pu");
+        EntityManagerFactory emf = Persistence.createEntityManagerFactory("hibernate-inheritance");
         EntityManager em = emf.createEntityManager();
-        ReservationService service = new ReservationService(em);
 
         try {
-            etape("1. Creation et persistance en cascade");
+            // toutes les insertions dans une seule transaction
             em.getTransaction().begin();
 
-            Utilisateur alice = new Utilisateur("Alice Dupont", "alice@example.com");
+            em.persist(new Voiture("Toyota", 2021, 4));
+            em.persist(new Moto("Harley", 2018, true));
+            em.persist(new Camion("Volvo", 2015, 18.5));
 
-            Batiment blocA = new Batiment("Bloc A", "12 avenue des Sciences", 3);
-            Salle salleA = new Salle("Salle A", 12, 1);
-            blocA.ajouterSalle(salleA);
+            em.persist(new Developpeur("Alice Martin", 15000, "Java"));
+            em.persist(new Manager("Bob Durand", 22000, 3));
+            em.persist(new Stagiaire("Sara Amrani", 3000, "ENSA", 6));
 
-            Equipement videoprojecteur = new Equipement("Videoprojecteur");
-            salleA.ajouterEquipement(videoprojecteur);
+            em.persist(new Livre("Clean Code", 350, "Robert C. Martin"));
+            em.persist(new Electronique("Smartphone", 4500, 24));
+            em.persist(new Vetement("Veste", 600, "M"));
 
-            Reservation reunion = new Reservation(LUNDI_9H, LUNDI_9H.plusHours(2), "Reunion de projet", salleA);
-            alice.ajouterReservation(reunion);
-
-            // un seul persist suffit : Utilisateur -> Reservation -> Salle -> (Batiment, Equipement)
-            em.persist(alice);
             em.getTransaction().commit();
 
-            System.out.println(alice);
-            System.out.println(blocA);
-            System.out.println(salleA + " -> " + salleA.getEquipementsInstalles());
-            System.out.println(reunion);
-            Long idAlice = alice.getIdUtilisateur();
-
-            etape("2. Equipement partage par deux salles (ManyToMany)");
-            service.enTransaction(e -> {
-                Salle salleB = new Salle("Salle B", 30, 2);
-                blocA.ajouterSalle(salleB);
-                salleB.ajouterEquipement(videoprojecteur);           // meme objet : aucune ligne dupliquee
-                salleB.ajouterEquipement(new Equipement("Tableau blanc"));
-                e.persist(salleB);
-            });
-            System.out.println("Salles avec videoprojecteur : " + service.sallesEquipeesDe("Videoprojecteur"));
-
-            etape("3. Nouvelle entite Batiment (OneToMany / ManyToOne)");
-            System.out.println("Salles du Bloc A d'au moins 20 places : " + service.sallesDuBatiment("Bloc A", 20));
-            try {
-                blocA.ajouterSalle(new Salle("Salle Toit", 8, 5));
-            } catch (IllegalArgumentException e) {
-                System.out.println("Refuse (etage inexistant) : " + e.getMessage());
-            }
-
-            etape("4. Disponibilite et reservations supplementaires");
-            Salle salleB = service.sallesEquipeesDe("Tableau blanc").get(0);
-            System.out.println("Salle A libre 10h-11h ? " + service.estDisponible(salleA, LUNDI_9H.plusHours(1), LUNDI_9H.plusHours(2)));
-            System.out.println("Salle A libre 14h-15h ? " + service.estDisponible(salleA, LUNDI_9H.plusHours(5), LUNDI_9H.plusHours(6)));
-            service.reserver(alice, salleA, LUNDI_9H.plusHours(5), LUNDI_9H.plusHours(6), "Cours JPA");
-            service.reserver(alice, salleB, LUNDI_9H.plusDays(1), LUNDI_9H.plusDays(1).plusHours(1), "Soutenance");
-            System.out.println("Reservations d'Alice :");
-            service.reservationsDe("alice@example.com").forEach(r -> System.out.println("  " + r));
-
-            etape("5. Gestion des erreurs");
-            try {
-                service.reserver(alice, salleA, LUNDI_9H.plusMinutes(30), LUNDI_9H.plusHours(1), "Conflit");
-            } catch (IllegalStateException e) {
-                System.out.println("Refuse (chevauchement) : " + e.getMessage());
-            }
-            try {
-                service.reserver(alice, salleB, LUNDI_9H.plusDays(3), LUNDI_9H.plusDays(2), "Dates inversees");
-            } catch (IllegalArgumentException e) {
-                System.out.println("Refuse (creneau invalide) : " + e.getMessage());
-            }
-            try {
-                // la contrainte UNIQUE sur adresse_mail est violee : l'erreur SQL est attendue
-                service.enTransaction(e -> e.persist(new Utilisateur("Autre Alice", "alice@example.com")));
-            } catch (IllegalStateException e) {
-                System.out.println("Refuse (mail deja utilise) : " + e.getMessage());
-            }
-
-            etape("6. Suppression orpheline d'une reservation");
-            // on vide le contexte de persistance pour tout relire depuis la base
+            // on vide le cache de l'EntityManager : les lectures suivantes interrogent la base
             em.clear();
-            em.getTransaction().begin();
-            Utilisateur aliceRelue = em.find(Utilisateur.class, idAlice);
-            Reservation aRetirer = aliceRelue.getListeReservations().iterator().next();
-            System.out.println("Retrait de " + aRetirer);
-            aliceRelue.retirerReservation(aRetirer);   // orphanRemoval -> DELETE au commit
-            em.getTransaction().commit();
-            System.out.println("Reservations restantes en base : " + compter(em, "Reservation"));
 
-            etape("7. Suppression d'un utilisateur (cascade REMOVE)");
-            em.getTransaction().begin();
-            em.remove(em.find(Utilisateur.class, idAlice));
-            em.getTransaction().commit();
-            System.out.println("Utilisateurs : " + compter(em, "Utilisateur")
-                    + ", reservations : " + compter(em, "Reservation")
-                    + ", batiments : " + compter(em, "Batiment")
-                    + ", salles : " + compter(em, "Salle")
-                    + ", equipements : " + compter(em, "Equipement"));
-            System.out.println("-> batiments, salles et equipements sont conserves (pas de cascade REMOVE vers eux)");
+            afficher("Vehicules (SINGLE_TABLE)",
+                    em.createQuery("SELECT v FROM Vehicule v", Vehicule.class).getResultList());
+            afficher("Employes (JOINED)",
+                    em.createQuery("SELECT e FROM Employe e", Employe.class).getResultList());
+            afficher("Produits (TABLE_PER_CLASS)",
+                    em.createQuery("SELECT p FROM Produit p", Produit.class).getResultList());
+
+            // requete sur un attribut herite : Hibernate filtre dans le UNION ALL
+            afficher("Produits a plus de 500 DH",
+                    em.createQuery("SELECT p FROM Produit p WHERE p.prix > 500", Produit.class).getResultList());
+
+            System.out.println("\nConsole H2 : " + consoleH2.getURL());
+            System.out.println("  JDBC URL    : jdbc:h2:mem:testdb");
+            System.out.println("  Utilisateur : sa   Mot de passe : (vide)");
+            System.out.println("Appuyez sur Entree pour fermer l'application et la console H2...");
+            new Scanner(System.in).nextLine();
         } finally {
-            // filet de securite : on ne laisse jamais une transaction ouverte avant de fermer
+            // annule une transaction restee ouverte apres une erreur, puis libere les ressources
             if (em.getTransaction().isActive()) em.getTransaction().rollback();
             em.close();
             emf.close();
+            consoleH2.stop();
         }
     }
 
-    // nombre de lignes d'une entite, via une requete JPQL generique
-    private static long compter(EntityManager em, String entite) {
-        return em.createQuery("SELECT COUNT(x) FROM " + entite + " x", Long.class).getSingleResult();
-    }
-
-    private static void etape(String libelle) {
-        System.out.println("\n========== " + libelle + " ==========");
+    // le toString de chaque sous-classe montre que l'objet relu a bien son type reel
+    private static void afficher(String titre, List<?> resultats) {
+        System.out.println("--- " + titre + " ---");
+        resultats.forEach(System.out::println);
     }
 }

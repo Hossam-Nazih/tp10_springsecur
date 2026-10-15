@@ -4,14 +4,16 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.example.jpa</groupId>
-    <artifactId>gestion-salles</artifactId>
+    <groupId>com.example</groupId>
+    <artifactId>hibernate-inheritance</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- classe lancee par mvn exec:java, surchargeable avec -Dexec.mainClass=... -->
+        <exec.mainClass>com.example.App</exec.mainClass>
     </properties>
 
     <dependencies>
@@ -27,17 +29,11 @@
             <artifactId>hibernate-core</artifactId>
             <version>5.4.30.Final</version>
         </dependency>
-        <!-- base en memoire ; scope compile (et non runtime) car Main utilise org.h2.tools.Server -->
+        <!-- base en memoire ; scope compile (et non runtime) car App demarre la console web H2 -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <version>1.4.200</version>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.13.2</version>
-            <scope>test</scope>
         </dependency>
     </dependencies>
 
@@ -48,16 +44,7 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.1.0</version>
                 <configuration>
-                    <mainClass>com.example.App</mainClass>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <!-- chaque classe de test démarre sa propre JVM pour obtenir une base H2 en mémoire isolée -->
-                    <reuseForks>false</reuseForks>
-                    <forkCount>1</forkCount>
+                    <mainClass>${exec.mainClass}</mainClass>
                 </configuration>
             </plugin>
         </plugins>
