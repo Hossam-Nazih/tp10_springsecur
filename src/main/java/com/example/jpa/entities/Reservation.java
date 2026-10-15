@@ -9,121 +9,134 @@ import javax.persistence.Enumerated;
 import javax.persistence.EnumType;
 import javax.persistence.ManyToOne;
 import javax.persistence.JoinColumn;
+import javax.persistence.Table;
 import java.time.LocalDateTime;
 
-// Occupation d'une salle par un utilisateur sur un creneau donne.
+/**
+ * Demande d'occupation d'une salle par un utilisateur, entre deux instants.
+ * Elle porte les deux cles etrangeres (salle et utilisateur) : c'est le cote "Many".
+ */
 @Entity
+@Table(name = "tp2_reservation")
 public class Reservation {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long identifiant;
+    @Column(name = "num_reservation")
+    private Long numReservation;
 
-    @Column(nullable = false)
-    private LocalDateTime debut;
+    // instant de debut du creneau (LocalDateTime -> colonne TIMESTAMP)
+    @Column(name = "date_heure_debut", nullable = false)
+    private LocalDateTime dateHeureDebut;
 
-    @Column(nullable = false)
-    private LocalDateTime fin;
+    // instant de fin du creneau, exclu : une reservation 9h-10h libere la salle a 10h pile
+    @Column(name = "date_heure_fin", nullable = false)
+    private LocalDateTime dateHeureFin;
 
-    // EnumType.STRING stocke le libelle (ex. "CONFIRMEE") plutot que l'index numerique,
-    // ce qui reste lisible si on consulte la table directement
+    // EnumType.STRING : la colonne contient "CONFIRMEE" et non 1 ; ajouter une valeur
+    // a l'enum plus tard ne decale donc pas les donnees deja enregistrees
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private StatutReservation etat;
+    @Column(name = "statut", nullable = false)
+    private StatutReservation statut;
 
-    @Column
-    private String objet;
+    // objet de la reunion / du cours, facultatif
+    @Column(name = "sujet")
+    private String sujet;
 
-    @Column(nullable = false)
-    private int effectifPrevu;
+    // nombre de personnes attendues, a comparer avec Salle.nombrePlaces
+    @Column(name = "nombre_participants", nullable = false)
+    private int nombreParticipants;
 
+    // salle bloquee par cette reservation (obligatoire)
     @ManyToOne
-    @JoinColumn(name = "salle_reservee_id", nullable = false)
-    private Salle salleReservee;
+    @JoinColumn(name = "salle_occupee_num", nullable = false)
+    private Salle salleOccupee;
 
+    // utilisateur qui a fait la demande (obligatoire)
     @ManyToOne
-    @JoinColumn(name = "demandeur_id", nullable = false)
-    private Utilisateur demandeur;
+    @JoinColumn(name = "reserve_par_num", nullable = false)
+    private Utilisateur reservePar;
 
     public Reservation() {}
 
-    public Reservation(LocalDateTime debut, LocalDateTime fin, String objet,
-                        int effectifPrevu, Salle salleReservee, Utilisateur demandeur) {
-        this.debut = debut;
-        this.fin = fin;
-        this.etat = StatutReservation.EN_ATTENTE;
-        this.objet = objet;
-        this.effectifPrevu = effectifPrevu;
-        this.salleReservee = salleReservee;
-        this.demandeur = demandeur;
+    // toute nouvelle reservation demarre EN_ATTENTE ; c'est le service qui la confirme
+    public Reservation(LocalDateTime dateHeureDebut, LocalDateTime dateHeureFin, String sujet,
+                       int nombreParticipants, Salle salleOccupee, Utilisateur reservePar) {
+        this.dateHeureDebut = dateHeureDebut;
+        this.dateHeureFin = dateHeureFin;
+        this.statut = StatutReservation.EN_ATTENTE;
+        this.sujet = sujet;
+        this.nombreParticipants = nombreParticipants;
+        this.salleOccupee = salleOccupee;
+        this.reservePar = reservePar;
     }
 
-    public Long getIdentifiant() {
-        return identifiant;
+    public Long getNumReservation() {
+        return numReservation;
     }
 
-    public LocalDateTime getDebut() {
-        return debut;
+    public LocalDateTime getDateHeureDebut() {
+        return dateHeureDebut;
     }
 
-    public void setDebut(LocalDateTime debut) {
-        this.debut = debut;
+    public void setDateHeureDebut(LocalDateTime dateHeureDebut) {
+        this.dateHeureDebut = dateHeureDebut;
     }
 
-    public LocalDateTime getFin() {
-        return fin;
+    public LocalDateTime getDateHeureFin() {
+        return dateHeureFin;
     }
 
-    public void setFin(LocalDateTime fin) {
-        this.fin = fin;
+    public void setDateHeureFin(LocalDateTime dateHeureFin) {
+        this.dateHeureFin = dateHeureFin;
     }
 
-    public StatutReservation getEtat() {
-        return etat;
+    public StatutReservation getStatut() {
+        return statut;
     }
 
-    public void setEtat(StatutReservation etat) {
-        this.etat = etat;
+    public void setStatut(StatutReservation statut) {
+        this.statut = statut;
     }
 
-    public String getObjet() {
-        return objet;
+    public String getSujet() {
+        return sujet;
     }
 
-    public void setObjet(String objet) {
-        this.objet = objet;
+    public void setSujet(String sujet) {
+        this.sujet = sujet;
     }
 
-    public int getEffectifPrevu() {
-        return effectifPrevu;
+    public int getNombreParticipants() {
+        return nombreParticipants;
     }
 
-    public void setEffectifPrevu(int effectifPrevu) {
-        this.effectifPrevu = effectifPrevu;
+    public void setNombreParticipants(int nombreParticipants) {
+        this.nombreParticipants = nombreParticipants;
     }
 
-    public Salle getSalleReservee() {
-        return salleReservee;
+    public Salle getSalleOccupee() {
+        return salleOccupee;
     }
 
-    public void setSalleReservee(Salle salleReservee) {
-        this.salleReservee = salleReservee;
+    public void setSalleOccupee(Salle salleOccupee) {
+        this.salleOccupee = salleOccupee;
     }
 
-    public Utilisateur getDemandeur() {
-        return demandeur;
+    public Utilisateur getReservePar() {
+        return reservePar;
     }
 
-    public void setDemandeur(Utilisateur demandeur) {
-        this.demandeur = demandeur;
+    public void setReservePar(Utilisateur reservePar) {
+        this.reservePar = reservePar;
     }
 
     @Override
     public String toString() {
-        return "Reservation [identifiant=" + identifiant
-                + ", salleReservee=" + (salleReservee != null ? salleReservee.getIntitule() : "aucune")
-                + ", demandeur=" + (demandeur != null ? demandeur.getNomComplet() : "aucun")
-                + ", debut=" + debut + ", fin=" + fin
-                + ", etat=" + etat + ", effectifPrevu=" + effectifPrevu + "]";
+        return "Reservation [num=" + numReservation
+                + ", salle=" + (salleOccupee != null ? salleOccupee.getNomSalle() : "aucune")
+                + ", par=" + (reservePar != null ? reservePar.getNomPrenom() : "personne")
+                + ", " + dateHeureDebut + " -> " + dateHeureFin
+                + ", statut=" + statut + ", participants=" + nombreParticipants + "]";
     }
 }

@@ -9,10 +9,14 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Scanner;
 
-// Point d'entree de demo : insere quelques donnees puis les affiche,
-// tout en laissant la console H2 ouverte pour les inspecter visuellement.
+/**
+ * Demonstration du TP2 (DAO + service) : remplit la base avec quelques salles,
+ * utilisateurs et une reservation, affiche le resultat des requetes, puis garde
+ * la console web H2 ouverte pour consulter les tables dans le navigateur.
+ */
 public class Main {
     public static void main(String[] args) throws SQLException {
+        // console web H2 sur http://localhost:8082 (meme JVM, donc elle voit la base en memoire)
         Server h2Console = Server.createWebServer("-web", "-webAllowOthers", "-webPort", "8082").start();
         System.out.println("Console H2 : " + h2Console.getURL());
         System.out.println("  JDBC URL  : jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1");

@@ -5,53 +5,62 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Column;
+import javax.persistence.Table;
 
-// Une salle physique pouvant etre reservee par un utilisateur.
+/**
+ * Local physique (salle de cours, de reunion...) que l'on peut affecter
+ * a des utilisateurs et reserver sur des creneaux.
+ */
 @Entity
+@Table(name = "tp2_salle")
 public class Salle {
 
-    // IDENTITY delegue la generation de la cle a la base (auto-increment H2),
-    // plus simple ici qu'une sequence puisqu'on reste sur une seule base H2.
+    // numero technique genere par la colonne auto-increment de H2 (strategie IDENTITY) :
+    // aucune sequence a gerer, la base attribue la valeur au moment de l'INSERT
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long identifiant;
+    @Column(name = "num_salle")
+    private Long numSalle;
 
-    // unique=true car deux salles ne peuvent pas porter le meme intitule dans le batiment
-    @Column(nullable = false, unique = true)
-    private String intitule;
+    // nom visible sur la porte ; la contrainte UNIQUE garantit qu'on ne confond jamais deux salles
+    @Column(name = "nom_salle", nullable = false, unique = true)
+    private String nomSalle;
 
-    @Column(nullable = false)
-    private int capaciteMax;
+    // nombre maximal de personnes que la salle peut accueillir
+    @Column(name = "nombre_places", nullable = false)
+    private int nombrePlaces;
 
+    // constructeur vide impose par la specification JPA (instanciation par reflexion)
     public Salle() {}
 
-    public Salle(String intitule, int capaciteMax) {
-        this.intitule = intitule;
-        this.capaciteMax = capaciteMax;
+    public Salle(String nomSalle, int nombrePlaces) {
+        this.nomSalle = nomSalle;
+        this.nombrePlaces = nombrePlaces;
     }
 
-    public Long getIdentifiant() {
-        return identifiant;
+    // pas de setter sur l'identifiant : c'est la base qui le fixe
+    public Long getNumSalle() {
+        return numSalle;
     }
 
-    public String getIntitule() {
-        return intitule;
+    public String getNomSalle() {
+        return nomSalle;
     }
 
-    public void setIntitule(String intitule) {
-        this.intitule = intitule;
+    public void setNomSalle(String nomSalle) {
+        this.nomSalle = nomSalle;
     }
 
-    public int getCapaciteMax() {
-        return capaciteMax;
+    public int getNombrePlaces() {
+        return nombrePlaces;
     }
 
-    public void setCapaciteMax(int capaciteMax) {
-        this.capaciteMax = capaciteMax;
+    public void setNombrePlaces(int nombrePlaces) {
+        this.nombrePlaces = nombrePlaces;
     }
 
     @Override
     public String toString() {
-        return "Salle [identifiant=" + identifiant + ", intitule=" + intitule + ", capaciteMax=" + capaciteMax + "]";
+        return "Salle [num=" + numSalle + ", nom=" + nomSalle + ", places=" + nombrePlaces + "]";
     }
 }

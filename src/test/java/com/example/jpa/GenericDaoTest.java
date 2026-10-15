@@ -39,20 +39,20 @@ public class GenericDaoTest {
     public void crudLifecycle() {
         Salle salle = new Salle("Salle DAO Test", 20);
         salleDao.create(salle);
-        Long identifiant = salle.getIdentifiant();
-        assertTrue(identifiant != null);
+        Long numSalle = salle.getNumSalle();
+        assertTrue(numSalle != null);
 
-        Salle found = salleDao.find(identifiant);
-        assertEquals("Salle DAO Test", found.getIntitule());
+        Salle found = salleDao.find(numSalle);
+        assertEquals("Salle DAO Test", found.getNomSalle());
 
-        found.setCapaciteMax(30);
+        found.setNombrePlaces(30);
         salleDao.update(found);
-        assertEquals(30, salleDao.find(identifiant).getCapaciteMax());
+        assertEquals(30, salleDao.find(numSalle).getNombrePlaces());
 
         List<Salle> toutes = salleDao.findAll();
-        assertTrue(toutes.stream().anyMatch(s -> s.getIdentifiant().equals(identifiant)));
+        assertTrue(toutes.stream().anyMatch(s -> s.getNumSalle().equals(numSalle)));
 
         salleDao.delete(found);
-        assertNull(salleDao.find(identifiant));
+        assertNull(salleDao.find(numSalle));
     }
 }

@@ -24,8 +24,8 @@ public class PersistenceSmokeTest {
         em.persist(utilisateur);
         em.getTransaction().commit();
 
-        assertNotNull(salle.getIdentifiant());
-        assertNotNull(utilisateur.getIdentifiant());
+        assertNotNull(salle.getNumSalle());
+        assertNotNull(utilisateur.getNumUtilisateur());
 
         em.close();
         emf.close();

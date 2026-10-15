@@ -7,67 +7,75 @@ import javax.persistence.Id;
 import javax.persistence.Column;
 import javax.persistence.ManyToOne;
 import javax.persistence.JoinColumn;
+import javax.persistence.Table;
 
-// Une personne qui peut se voir attribuer une salle et y faire des reservations.
+/**
+ * Personne enregistree dans l'application : elle est rattachee a une salle
+ * "de base" et peut deposer des reservations.
+ */
 @Entity
+@Table(name = "tp2_utilisateur")
 public class Utilisateur {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long identifiant;
+    @Column(name = "num_utilisateur")
+    private Long numUtilisateur;
 
-    @Column(nullable = false)
-    private String nomComplet;
+    // nom et prenom tels qu'ils apparaissent dans les listes
+    @Column(name = "nom_prenom", nullable = false)
+    private String nomPrenom;
 
-    // unique=true : on identifie un utilisateur par son email dans les recherches metier
-    @Column(nullable = false, unique = true)
-    private String adresseEmail;
+    // adresse de contact ; UNIQUE car elle sert a retrouver un utilisateur sans connaitre son numero
+    @Column(name = "courriel", nullable = false, unique = true)
+    private String courriel;
 
-    // ManyToOne : plusieurs utilisateurs peuvent partager la meme salle, mais chacun n'en a qu'une
+    // relation ManyToOne : une salle peut etre partagee par plusieurs utilisateurs,
+    // mais chaque utilisateur n'est affecte qu'a une seule salle (facultative : colonne nullable)
     @ManyToOne
-    @JoinColumn(name = "salle_attribuee_id")
-    private Salle salleAttribuee;
+    @JoinColumn(name = "salle_affectee_num")
+    private Salle salleAffectee;
 
     public Utilisateur() {}
 
-    public Utilisateur(String nomComplet, String adresseEmail, Salle salleAttribuee) {
-        this.nomComplet = nomComplet;
-        this.adresseEmail = adresseEmail;
-        this.salleAttribuee = salleAttribuee;
+    public Utilisateur(String nomPrenom, String courriel, Salle salleAffectee) {
+        this.nomPrenom = nomPrenom;
+        this.courriel = courriel;
+        this.salleAffectee = salleAffectee;
     }
 
-    public Long getIdentifiant() {
-        return identifiant;
+    public Long getNumUtilisateur() {
+        return numUtilisateur;
     }
 
-    public String getNomComplet() {
-        return nomComplet;
+    public String getNomPrenom() {
+        return nomPrenom;
     }
 
-    public void setNomComplet(String nomComplet) {
-        this.nomComplet = nomComplet;
+    public void setNomPrenom(String nomPrenom) {
+        this.nomPrenom = nomPrenom;
     }
 
-    public String getAdresseEmail() {
-        return adresseEmail;
+    public String getCourriel() {
+        return courriel;
     }
 
-    public void setAdresseEmail(String adresseEmail) {
-        this.adresseEmail = adresseEmail;
+    public void setCourriel(String courriel) {
+        this.courriel = courriel;
     }
 
-    public Salle getSalleAttribuee() {
-        return salleAttribuee;
+    public Salle getSalleAffectee() {
+        return salleAffectee;
     }
 
-    public void setSalleAttribuee(Salle salleAttribuee) {
-        this.salleAttribuee = salleAttribuee;
+    public void setSalleAffectee(Salle salleAffectee) {
+        this.salleAffectee = salleAffectee;
     }
 
+    // on affiche seulement le nom de la salle pour garder une sortie courte et lisible
     @Override
     public String toString() {
-        return "Utilisateur [identifiant=" + identifiant + ", nomComplet=" + nomComplet
-                + ", adresseEmail=" + adresseEmail
-                + ", salleAttribuee=" + (salleAttribuee != null ? salleAttribuee.getIntitule() : "aucune") + "]";
+        return "Utilisateur [num=" + numUtilisateur + ", nom=" + nomPrenom + ", courriel=" + courriel
+                + ", salle=" + (salleAffectee != null ? salleAffectee.getNomSalle() : "aucune") + "]";
     }
 }

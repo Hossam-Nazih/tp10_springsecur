@@ -39,12 +39,12 @@ public class ReservationTest {
         LocalDateTime fin = LocalDateTime.of(2026, 10, 20, 10, 0);
         Reservation reservation = service.reserver(debut, fin, "Reunion equipe", 5, salle, utilisateur);
 
-        assertNotNull(reservation.getIdentifiant());
-        assertEquals(StatutReservation.CONFIRMEE, reservation.getEtat());
+        assertNotNull(reservation.getNumReservation());
+        assertEquals(StatutReservation.CONFIRMEE, reservation.getStatut());
 
         List<Reservation> reservations = service.reservationsParSalle("Salle Reservation");
         assertEquals(1, reservations.size());
-        assertEquals("Reunion equipe", reservations.get(0).getObjet());
+        assertEquals("Reunion equipe", reservations.get(0).getSujet());
     }
 
     @Test
@@ -83,6 +83,6 @@ public class ReservationTest {
         service.annulerReservation(reservation);
 
         Reservation misAJour = service.reservationsParSalle("Salle Annulation").get(0);
-        assertEquals(StatutReservation.ANNULEE, misAJour.getEtat());
+        assertEquals(StatutReservation.ANNULEE, misAJour.getStatut());
     }
 }

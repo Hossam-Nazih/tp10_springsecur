@@ -4,15 +4,16 @@ import com.example.jpa.entities.Utilisateur;
 import javax.persistence.EntityManager;
 import java.util.List;
 
+/** Acces aux utilisateurs : CRUD herite + recherche par salle d'affectation. */
 public class UtilisateurDao extends GenericDao<Utilisateur> {
 
     public UtilisateurDao(EntityManager em) {
         super(Utilisateur.class, em);
     }
 
-    // jointure implicite JPQL via la relation salleAttribuee -> pas besoin d'ecrire un JOIN explicite
+    // "u.salleAffectee.nomSalle" : JPQL suit la relation ManyToOne et genere lui-meme la jointure SQL
     public List<Utilisateur> findBySalleNom(String nomSalle) {
-        return em.createQuery("SELECT u FROM Utilisateur u WHERE u.salleAttribuee.intitule = :nomSalle", Utilisateur.class)
+        return em.createQuery("SELECT u FROM Utilisateur u WHERE u.salleAffectee.nomSalle = :nomSalle", Utilisateur.class)
                  .setParameter("nomSalle", nomSalle)
                  .getResultList();
     }

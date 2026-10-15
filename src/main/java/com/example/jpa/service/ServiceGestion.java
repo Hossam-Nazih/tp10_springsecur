@@ -14,74 +14,84 @@ import javax.persistence.Persistence;
 import java.time.LocalDateTime;
 import java.util.List;
 
-// Facade metier : regroupe les DAO et expose des operations pretes a l'emploi
-// pour ne pas exposer EntityManager/transactions au reste de l'application.
+/**
+ * Point d'entree unique de la couche metier (patron "facade").
+ * Le code appelant manipule des salles, utilisateurs et reservations
+ * sans jamais voir l'EntityManager ni les transactions.
+ */
 public class ServiceGestion {
 
-    private EntityManagerFactory emf;
+    // fabrique creee une seule fois a partir de l'unite "gestionPU" de persistence.xml
+    private EntityManagerFactory fabrique;
+    // contexte de persistance partage par les trois DAO
     private EntityManager em;
-    private SalleDao salleDao;
-    private UtilisateurDao utilisateurDao;
-    private ReservationDao reservationDao;
+    private SalleDao daoSalle;
+    private UtilisateurDao daoUtilisateur;
+    private ReservationDao daoReservation;
 
     public ServiceGestion() {
-        emf = Persistence.createEntityManagerFactory("gestionPU");
-        em = emf.createEntityManager();
-        salleDao = new SalleDao(em);
-        utilisateurDao = new UtilisateurDao(em);
-        reservationDao = new ReservationDao(em);
+        fabrique = Persistence.createEntityManagerFactory("gestionPU");
+        em = fabrique.createEntityManager();
+        daoSalle = new SalleDao(em);
+        daoUtilisateur = new UtilisateurDao(em);
+        daoReservation = new ReservationDao(em);
     }
 
+    // a appeler en fin d'utilisation pour liberer les connexions a la base
     public void fermer() {
         em.close();
-        emf.close();
+        fabrique.close();
     }
 
     public void ajouterSalle(Salle salle) {
-        salleDao.create(salle);
+        daoSalle.create(salle);
     }
 
     public void ajouterUtilisateur(Utilisateur utilisateur) {
-        utilisateurDao.create(utilisateur);
+        daoUtilisateur.create(utilisateur);
     }
 
     public List<Salle> listerSalles() {
-        return salleDao.findAll();
+        return daoSalle.findAll();
     }
 
     public List<Utilisateur> listerUtilisateurs() {
-        return utilisateurDao.findAll();
+        return daoUtilisateur.findAll();
     }
 
     public List<Utilisateur> utilisateursParSalle(String nomSalle) {
-        return utilisateurDao.findBySalleNom(nomSalle);
+        return daoUtilisateur.findBySalleNom(nomSalle);
     }
 
-    // verifie d'abord qu'aucune reservation existante ne chevauche le creneau demande
-    // avant de confirmer, pour ne jamais double-booker une salle
-    public Reservation reserver(LocalDateTime debut, LocalDateTime fin, String objet,
-                                 int effectifPrevu, Salle salleReservee, Utilisateur demandeur) {
-        List<Reservation> conflits = reservationDao.findChevauchements(salleReservee.getIntitule(), debut, fin);
+    /**
+     * Enregistre une reservation confirmee, sauf si le creneau est deja pris :
+     * on interroge d'abord les chevauchements pour ne jamais attribuer deux fois la meme salle.
+     */
+    public Reservation reserver(LocalDateTime debut, LocalDateTime fin, String sujet,
+                                int nombreParticipants, Salle salleOccupee, Utilisateur reservePar) {
+        List<Reservation> conflits = daoReservation.findChevauchements(salleOccupee.getNomSalle(), debut, fin);
         if (!conflits.isEmpty()) {
-            throw new IllegalStateException("La salle " + salleReservee.getIntitule() + " est deja reservee sur ce creneau");
+            throw new IllegalStateException("La salle " + salleOccupee.getNomSalle() + " est deja reservee sur ce creneau");
         }
 
-        Reservation reservation = new Reservation(debut, fin, objet, effectifPrevu, salleReservee, demandeur);
-        reservation.setEtat(StatutReservation.CONFIRMEE);
-        reservationDao.create(reservation);
+        Reservation reservation = new Reservation(debut, fin, sujet, nombreParticipants, salleOccupee, reservePar);
+        // le creneau est libre : la demande passe directement de EN_ATTENTE a CONFIRMEE
+        reservation.setStatut(StatutReservation.CONFIRMEE);
+        daoReservation.create(reservation);
         return reservation;
     }
 
     public List<Reservation> listerReservations() {
-        return reservationDao.findAll();
+        return daoReservation.findAll();
     }
 
     public List<Reservation> reservationsParSalle(String nomSalle) {
-        return reservationDao.findBySalleNom(nomSalle);
+        return daoReservation.findBySalleNom(nomSalle);
     }
 
+    // on garde une trace de la reservation annulee (statut) au lieu de la supprimer
     public void annulerReservation(Reservation reservation) {
-        reservation.setEtat(StatutReservation.ANNULEE);
-        reservationDao.update(reservation);
+        reservation.setStatut(StatutReservation.ANNULEE);
+        daoReservation.update(reservation);
     }
 }

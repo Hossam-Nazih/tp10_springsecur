@@ -1,7 +1,10 @@
 package com.example.jpa.entities;
 
-// Cycle de vie d'une reservation : une demande part a EN_ATTENTE, est validee en CONFIRMEE,
-// ou peut etre ANNULEE a tout moment par l'utilisateur ou le service.
+/**
+ * Etats possibles d'une reservation :
+ * EN_ATTENTE a la creation, CONFIRMEE une fois le creneau verifie libre,
+ * ANNULEE si le demandeur ou le gestionnaire y renonce.
+ */
 public enum StatutReservation {
     EN_ATTENTE,
     CONFIRMEE,

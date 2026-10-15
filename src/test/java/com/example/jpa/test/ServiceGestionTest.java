@@ -32,7 +32,7 @@ public class ServiceGestionTest {
 
         List<Salle> salles = service.listerSalles();
         assertFalse(salles.isEmpty());
-        assertTrue(salles.stream().anyMatch(s -> s.getIntitule().equals("Salle Test")));
+        assertTrue(salles.stream().anyMatch(s -> s.getNomSalle().equals("Salle Test")));
     }
 
     @Test
@@ -45,7 +45,7 @@ public class ServiceGestionTest {
 
         List<Utilisateur> utilisateurs = service.listerUtilisateurs();
         assertTrue(utilisateurs.stream().anyMatch(u ->
-                u.getNomComplet().equals("Alice") && u.getSalleAttribuee().getIntitule().equals("Salle B")));
+                u.getNomPrenom().equals("Alice") && u.getSalleAffectee().getNomSalle().equals("Salle B")));
     }
 
     @Test

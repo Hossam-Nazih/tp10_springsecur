@@ -49,11 +49,11 @@ public class SpecificDaoTest {
         utilisateurDao.create(bob);
 
         List<Salle> grandes = salleDao.findByCapaciteMin(20);
-        assertTrue(grandes.stream().anyMatch(s -> s.getIntitule().equals("Grande Salle")));
-        assertTrue(grandes.stream().noneMatch(s -> s.getIntitule().equals("Petite Salle")));
+        assertTrue(grandes.stream().anyMatch(s -> s.getNomSalle().equals("Grande Salle")));
+        assertTrue(grandes.stream().noneMatch(s -> s.getNomSalle().equals("Petite Salle")));
 
         List<Utilisateur> occupants = utilisateurDao.findBySalleNom("Grande Salle");
         assertEquals(1, occupants.size());
-        assertEquals("Bob", occupants.get(0).getNomComplet());
+        assertEquals("Bob", occupants.get(0).getNomPrenom());
     }
 }
