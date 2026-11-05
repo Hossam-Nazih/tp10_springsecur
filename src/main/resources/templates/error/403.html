@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Accès refusé</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<main>
+    <!-- Spring Boot choisit ce modèle d'après le code de réponse -->
+    <h1>Erreur 403 - Accès refusé</h1>
+    <p class="intro">Votre rôle ne permet pas d'ouvrir cette page.</p>
+    <div class="bloc navigation">
+        <a th:href="@{/home}">Retour à l'accueil</a>
+        <form th:replace="~{fragments/communs :: deconnexion}"></form>
+    </div>
+</main>
+</body>
+</html>

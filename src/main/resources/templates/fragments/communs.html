@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<body>
+
+<!-- La déconnexion passe par un POST : un simple lien GET ne déclencherait pas le filtre de logout -->
+<form th:fragment="deconnexion" th:action="@{/logout}" method="post">
+    <button type="submit" class="discret">Se déconnecter</button>
+</form>
+
+<!-- En-tête d'une demande : objet, statut, texte, puis réponses déjà envoyées -->
+<div th:fragment="contenu(demande)">
+    <h3 th:text="${demande.objet}">Objet</h3>
+    <span class="statut" th:classappend="${demande.traitee} ? 'traitee'"
+          th:text="${demande.traitee} ? 'Traitée' : 'En attente'">Statut</span>
+    <p th:text="${demande.description}">Description</p>
+    <div class="details"
+         th:text="|Par ${demande.demandeur}, le ${#temporals.format(demande.dateCreation, 'dd/MM/yyyy à HH:mm')}|">
+        Demandeur et date
+    </div>
+    <div class="reponse" th:each="reponse : ${demande.reponses}">
+        <p th:text="${reponse.message}">Réponse</p>
+        <div class="details"
+             th:text="|Réponse de ${reponse.redacteur}, le ${#temporals.format(reponse.dateReponse, 'dd/MM/yyyy à HH:mm')}|">
+            Rédacteur et date
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

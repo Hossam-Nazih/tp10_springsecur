@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Espace Administrateur</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<main>
+    <h1>Espace Administrateur</h1>
+    <p class="intro" th:text="|Section réservée au rôle ADMIN. Connecté en tant que ${nomConnecte}.|"></p>
+
+    <div class="bloc navigation">
+        <a th:href="@{/home}">Accueil</a>
+        <a th:href="@{/user/dashboard}">Espace Utilisateur</a>
+        <form th:replace="~{fragments/communs :: deconnexion}"></form>
+    </div>
+
+    <section class="bloc">
+        <h2>Toutes les demandes</h2>
+        <div class="message-erreur" th:if="${erreur}" th:text="${erreur}"></div>
+        <div class="message-succes" th:if="${succes}" th:text="${succes}"></div>
+        <p class="aucune" th:if="${#lists.isEmpty(demandes)}">Aucune demande pour le moment.</p>
+
+        <div class="demande" th:each="demande : ${demandes}">
+            <div th:replace="~{fragments/communs :: contenu(${demande})}"></div>
+
+            <form class="actions-reponse" th:action="@{/admin/demandes/{id}/reponses(id=${demande.idDemande})}"
+                  method="post">
+                <label th:for="|message-${demande.idDemande}|">Répondre</label>
+                <textarea th:id="|message-${demande.idDemande}|" name="message" rows="2" maxlength="1000"></textarea>
+                <button type="submit">Envoyer la réponse</button>
+            </form>
+            <form class="actions" th:action="@{/admin/demandes/{id}/supprimer(id=${demande.idDemande})}" method="post">
+                <button type="submit" class="supprimer">Supprimer la demande</button>
+            </form>
+        </div>
+    </section>
+</main>
+</body>
+</html>

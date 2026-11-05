@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Espace Utilisateur</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<main>
+    <h1>Espace Utilisateur</h1>
+    <p class="intro" th:text="|Accessible aux rôles USER et ADMIN. Connecté en tant que ${nomConnecte}.|"></p>
+
+    <div class="bloc navigation">
+        <a th:href="@{/home}">Accueil</a>
+        <form th:replace="~{fragments/communs :: deconnexion}"></form>
+    </div>
+
+    <section class="bloc">
+        <h2>Nouvelle demande d'assistance</h2>
+        <div class="message-erreur" th:if="${erreur}" th:text="${erreur}"></div>
+        <div class="message-succes" th:if="${succes}" th:text="${succes}"></div>
+        <form th:action="@{/user/demandes}" method="post">
+            <label for="objet">Objet</label>
+            <input type="text" id="objet" name="objet" maxlength="100">
+            <label for="description">Description</label>
+            <textarea id="description" name="description" rows="3" maxlength="1000"></textarea>
+            <button type="submit">Envoyer</button>
+        </form>
+    </section>
+
+    <section class="bloc">
+        <h2>Mes demandes</h2>
+        <p class="aucune" th:if="${#lists.isEmpty(demandes)}">Vous n'avez encore envoyé aucune demande.</p>
+        <div class="demande" th:each="demande : ${demandes}">
+            <div th:replace="~{fragments/communs :: contenu(${demande})}"></div>
+        </div>
+    </section>
+</main>
+</body>
+</html>
